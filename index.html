@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Keyword</title>
+  <style>
+    /* ======== Catatan Style ======== */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f3f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    section {
+      padding: 2rem 1rem;
+    }
+
+    .note-wrapper {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: auto;
+    }
+
+    .note-box {
+      background: white;
+      padding: 1.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      flex: 1 1 450px;
+      min-width: 300px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: #333;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 240px;
+      padding: 1rem;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      resize: vertical;
+      font-family: inherit;
+      background: #fafafa;
+      transition: border 0.3s ease;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.6rem 1rem;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      transition: background 0.2s ease;
+      min-width: 90px;
+    }
+
+    .copy-btn {
+      background-color: #4a90e2;
+    }
+
+    .copy-btn:hover {
+      background-color: #357ac8;
+    }
+
+    .paste-btn {
+      background-color: #28a745;
+    }
+
+    .paste-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    .clear-btn {
+      background-color: #dc3545;
+    }
+
+    .clear-btn:hover {
+      background-color: #bb2d3b;
+    }
+
+    .popup {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #2d2f36;
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 9999;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .popup.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .note-wrapper {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 500px) {
+      textarea {
+        height: 180px;
+        font-size: 14px;
+      }
+    }
+  
+/* ======== Navbar Style ======== */
+.navbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 40px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.center-logo {
+  font-size: 1.4rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
+}
+</style>
+</head>
+<body>
+
+
+
+<!-- ======== Navbar ======== -->
+<nav class="navbar">
+  <div class="logo"><a href="#" class="center-logo">Yabai ne</a></div>
+</nav>
+
+
+
+<!-- ======== Section: Catatan ======== -->
+<section id="catatan">
+  <div class="note-wrapper">
+    <div class="note-box">
+      <h2>Catatan 1</h2>
+      <textarea id="note1" placeholder="Tulis catatan pertama di sini..."></textarea>
+      <div class="buttons">
+        <button class="copy-btn" onclick="copyNote('note1')">Copy</button>
+        <button class="paste-btn" onclick="pasteNote('note1')">Paste</button>
+        <button class="clear-btn" onclick="clearNote('note1')">Clear</button>
+      </div>
+    </div>
+
+    <div class="note-box">
+      <h2>Catatan 2</h2>
+      <textarea id="note2" placeholder="Tulis catatan kedua di sini..."></textarea>
+      <div class="buttons">
+        <button class="copy-btn" onclick="copyNote('note2')">Copy</button>
+        <button class="paste-btn" onclick="pasteNote('note2')">Paste</button>
+        <button class="clear-btn" onclick="clearNote('note2')">Clear</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="popup" id="popup">Teks disalin!</div>
+
+<script>
+  function showPopup(message = "Teks disalin!") {
+    const popup = document.getElementById("popup");
+    popup.textContent = message;
+    popup.classList.add("show");
+    setTimeout(() => {
+      popup.classList.remove("show");
+    }, 2000);
+  }
+
+  function copyNote(id) {
+    const textarea = document.getElementById(id);
+    const text = textarea.value.trim();
+
+    if (text === "") {
+      alert("Tidak ada teks untuk disalin.");
+      return;
+    }
+
+    try {
+      const tempTextarea = document.createElement("textarea");
+      tempTextarea.style.position = "fixed";
+      tempTextarea.style.opacity = "0";
+      tempTextarea.value = text;
+      document.body.appendChild(tempTextarea);
+      tempTextarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempTextarea);
+
+      textarea.style.border = "2px solid #4a90e2";
+      setTimeout(() => {
+        textarea.style.border = "";
+      }, 800);
+
+      showPopup("Teks berhasil disalin!");
+    } catch (err) {
+      alert("Gagal menyalin teks.");
+    }
+  }
+
+  function pasteNote(id) {
+    navigator.clipboard.readText().then(text => {
+      const textarea = document.getElementById(id);
+      if (text) {
+        textarea.value += text;
+        showPopup("Teks berhasil dipaste!");
+      }
+    }).catch(() => {
+      alert('Gagal mengambil clipboard. Coba di desktop atau beri izin clipboard.');
+    });
+  }
+
+  function clearNote(id) {
+    if (confirm('Hapus catatan ini?')) {
+      document.getElementById(id).value = '';
+      showPopup("Catatan berhasil dihapus!");
+    }
+  }
+</script>
+<!-- ======== Section: Keyword Tool ======== -->
+<section id="keyword-tool">
+  <style>
+    /* ======== Keyword Tool Styles ======== */
+    #keyword-tool h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #keyword-tool .reset-button {
+      display: block;
+      margin: 0 auto 20px auto;
+      padding: 8px 20px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 200px;
+    }
+    #keyword-tool .container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: nowrap;
+      max-width: 1200px;
+      margin: auto;
+      flex-wrap: wrap;
+    }
+    #keyword-tool .box {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      flex: 1;
+      min-width: 300px;
+      max-width: 600px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .title-count {
+      font-size: 12px;
+      color: #666;
+    }
+    .input-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      min-height: 60px;
+      cursor: text;
+    }
+    .tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .tag-before {
+      background-color: #dceeff;
+      color: #005999;
+    }
+    .tag-after {
+      background-color: #dbf5e7;
+      color: #1b6840;
+    }
+    .tag .remove {
+      margin-left: 5px;
+      cursor: pointer;
+    }
+    input[type="text"] {
+      border: none;
+      outline: none;
+      flex: 1;
+      min-width: 120px;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .button-group button,
+    .copy-button {
+      width: 120px;
+      height: 40px;
+      padding: 6px 10px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .after-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 60px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    .copy-container {
+      margin-top: 15px;
+    }
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+
+  <h1>Keyword Reorganize</h1>
+  <button class="reset-button" onclick="resetAll()">Reset Semua</button>
+
+  <div class="container">
+    <div class="box">
+      <div class="title-row">
+        <h2>Before</h2>
+        <span id="beforeCount" class="title-count">0</span>
+      </div>
+      <div class="input-container" id="beforeContainer" onclick="focusInput()">
+        <input type="text" id="keywordInput" placeholder="Ketik keyword, tekan koma atau Enter" />
+      </div>
+      <div class="button-group">
+        <button onclick="removeDuplicates()">Hapus Duplikat</button>
+        <button onclick="pasteFromClipboard()">Paste</button>
+        <button onclick="manualEnter()">Enter</button>
+        <button onclick="deleteAll()">Delete All</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="title-row">
+        <h2>After</h2>
+        <span id="afterCount" class="title-count">0</span>
+      </div>
+      <div class="after-container" id="afterContainer"></div>
+      <div class="copy-container">
+        <button class="copy-button" onclick="copyKeywords()">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const input = document.getElementById('keywordInput');
+    const beforeContainer = document.getElementById('beforeContainer');
+    const afterContainer = document.getElementById('afterContainer');
+    const beforeCount = document.getElementById('beforeCount');
+    const afterCount = document.getElementById('afterCount');
+    const toast = document.getElementById('toast');
+
+    let keywords = [];
+    let afterKeywords = [];
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.className = 'toast show';
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 2000);
+    }
+
+    function addKeyword(word) {
+      word = word.trim();
+      if (word && !keywords.includes(word)) {
+        keywords.push(word);
+        const tag = document.createElement('span');
+        tag.className = 'tag tag-before';
+        tag.innerHTML = word + ' <span class="remove" onclick="removeKeyword(\'' + word + '\')">&times;</span>';
+        beforeContainer.insertBefore(tag, input);
+        updateCounts();
+      }
+    }
+
+    function removeKeyword(word) {
+      keywords = keywords.filter(k => k !== word);
+      renderKeywords();
+      updateCounts();
+    }
+
+    function removeAfterKeyword(word) {
+      afterKeywords = afterKeywords.filter(k => k !== word);
+      renderAfterKeywords();
+      updateCounts();
+    }
+
+    function renderKeywords() {
+      const existingTags = beforeContainer.querySelectorAll('.tag');
+      existingTags.forEach(tag => tag.remove());
+      keywords.forEach(addKeyword);
+    }
+
+    function renderAfterKeywords() {
+      afterContainer.innerHTML = '';
+      afterKeywords.forEach(k => {
+        const tag = document.createElement('span');
+        tag.className = 'tag tag-after';
+        tag.innerHTML = k + ' <span class="remove" onclick="removeAfterKeyword(\'' + k + '\')">&times;</span>';
+        afterContainer.appendChild(tag);
+      });
+    }
+
+    function updateCounts() {
+      beforeCount.textContent = keywords.length;
+      afterCount.textContent = afterKeywords.length;
+    }
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const values = input.value.split(',');
+        values.forEach(v => addKeyword(v));
+        input.value = '';
+      }
+    });
+
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const text = e.clipboardData.getData('text');
+      const values = text.split(',');
+      values.forEach(v => addKeyword(v));
+    });
+
+    function focusInput() {
+      input.focus();
+    }
+
+    function removeDuplicates() {
+      afterKeywords = [...new Set(keywords)];
+      renderAfterKeywords();
+      updateCounts();
+      showToast('Duplikat dihapus!');
+    }
+
+    function manualEnter() {
+      const values = input.value.split(',');
+      values.forEach(v => addKeyword(v));
+      input.value = '';
+      showToast('Kata kunci ditambahkan!');
+    }
+
+    function deleteAll() {
+      keywords = [];
+      input.value = '';
+      renderKeywords();
+      updateCounts();
+      showToast('Semua keyword dihapus!');
+    }
+
+    function resetAll() {
+      keywords = [];
+      afterKeywords = [];
+      input.value = '';
+      renderKeywords();
+      renderAfterKeywords();
+      updateCounts();
+      showToast('Reset berhasil!');
+    }
+
+    function pasteFromClipboard() {
+      navigator.clipboard.readText()
+        .then(text => {
+          const values = text.split(',');
+          values.forEach(v => addKeyword(v));
+          showToast('Berhasil paste dari clipboard!');
+        })
+        .catch(() => showToast('Gagal membaca clipboard'));
+    }
+
+    function copyKeywords() {
+      const tags = afterContainer.querySelectorAll('.tag');
+      const text = Array.from(tags).map(tag => tag.textContent.replace('×', '').trim()).join(', ');
+
+      const tempTextarea = document.createElement('textarea');
+      tempTextarea.value = text;
+      document.body.appendChild(tempTextarea);
+      tempTextarea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        showToast(successful ? 'Disalin ke clipboard!' : 'Gagal menyalin ke clipboard!');
+      } catch (err) {
+        showToast('Gagal menyalin ke clipboard!');
+      }
+
+      document.body.removeChild(tempTextarea);
+    }
+  </script>
+</section>
+<!-- ======== Section: Metadata Edit ======== -->
+<section id="metadata-edit">
+  <style>
+    /* ======== Metadata Edit Styles ======== */
+    #metadata-edit header {
+      background: white;
+      padding: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #ddd;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    #metadata-edit header label.upload-btn, #metadata-edit header button {
+      background-color: #007bff;
+      color: white;
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #metadata-edit header button:hover,
+    #metadata-edit header label.upload-btn:hover {
+      background-color: #0056b3;
+    }
+    #metadata-edit header button.save {
+      background-color: #28a745;
+    }
+    #metadata-edit header button.select {
+      background-color: #6c757d;
+    }
+    #metadata-edit header button.delete {
+      background-color: #dc3545;
+    }
+    #metadata-edit .container {
+      padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .file-entry {
+      display: flex;
+      flex-wrap: wrap;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      gap: 1.2rem;
+      align-items: flex-start;
+    }
+    .file-entry img {
+      width: 160px;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #eee;
+    }
+    .meta {
+      flex: 1;
+      min-width: 240px;
+    }
+    .meta strong {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 16px;
+    }
+    .meta label {
+      font-weight: 600;
+      font-size: 14px;
+      margin-top: 0.3rem;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .meta input[type="text"] {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .paste-btn, .clear-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .paste-btn:hover, .clear-btn:hover {
+      background-color: #495057;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 0.5rem;
+    }
+    .tag {
+      background: #007bff;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+    }
+    .tag span {
+      margin-left: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .actions button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .checkbox {
+      margin-bottom: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      .file-entry {
+        flex-direction: column;
+        align-items: center;
+      }
+      .meta {
+        width: 100%;
+      }
+      .file-entry img {
+        width: 100%;
+        max-width: 320px;
+      }
+    }
+  </style>
+
+  <header>
+    <label for="fileInputMetadata" class="upload-btn">Pilih File</label>
+    <input type="file" id="fileInputMetadata" multiple accept=".jpg,.jpeg" style="display:none" />
+    <button class="save" onclick="downloadMetadata()">Save Metadata</button>
+    <button class="delete" onclick="deleteSelected()">Delete All</button>
+    <button class="select" onclick="selectAll(true)">Select All</button>
+  </header>
+
+  <div class="container" id="previewContainer"></div>
+
+  <script>
+    let filesData = [];
+
+    document.getElementById('fileInputMetadata').addEventListener('change', handleFiles);
+
+    function handleFiles(e) {
+      const files = Array.from(e.target.files).sort((a, b) => a.name.localeCompare(b.name));
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          filesData.push({ file, title: '', tags: [], selected: true });
+          renderPreview(file.name, e.target.result);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderPreview(fileName, imageSrc) {
+      const container = document.createElement('div');
+      container.className = 'file-entry';
+      container.dataset.filename = fileName;
+
+      container.innerHTML = `
+        <div>
+          <input type="checkbox" class="checkbox" checked onchange="toggleSelect(this)">
+          <img src="${imageSrc}" alt="${fileName}">
+        </div>
+        <div class="meta">
+          <strong>${fileName}</strong>
+          <label>Title:</label>
+          <div class="input-row">
+            <input type="text" oninput="updateField('${fileName}', 'title', this.value)" id="title-${fileName}">
+            <button onclick="pasteToField('title-${fileName}')" class="paste-btn">Paste</button>
+            <button onclick="clearField('title-${fileName}')" class="clear-btn">Clear</button>
+          </div>
+
+          <div>Tags: <span id="count-${fileName}">0/50</span></div>
+          <div class="tags" id="tags-${fileName}"></div>
+          <div class="input-row">
+            <input type="text" placeholder="Add tags (comma or enter)" onkeydown="handleTagInput(event, '${fileName}')" id="taginput-${fileName}">
+            <button onclick="pasteToTags('${fileName}')" class="paste-btn">Paste</button>
+            <button onclick="clearTags('${fileName}')" class="clear-btn">Clear</button>
+          </div>
+
+          <div class="actions">
+            <button onclick="removeFile('${fileName}')">Hapus</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('previewContainer').appendChild(container);
+    }
+
+    function updateField(fileName, field, value) {
+      const file = filesData.find(f => f.file.name === fileName);
+      if (file) file[field] = value;
+    }
+
+    function handleTagInput(e, fileName) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (!val) return;
+        const rawTags = val.split(',').map(t => t.trim()).filter(Boolean);
+        const file = filesData.find(f => f.file.name === fileName);
+        if (file) {
+          rawTags.forEach(tag => {
+            if (file.tags.length < 50 && !file.tags.includes(tag)) {
+              file.tags.push(tag);
+            }
+          });
+          e.target.value = '';
+          updateTagsDisplay(fileName);
+        }
+      }
+    }
+
+    function updateTagsDisplay(fileName) {
+      const file = filesData.find(f => f.file.name === fileName);
+      const tagContainer = document.getElementById(`tags-${fileName}`);
+      const countEl = document.getElementById(`count-${fileName}`);
+      tagContainer.innerHTML = '';
+      file.tags.forEach((tag, i) => {
+        const el = document.createElement('div');
+        el.className = 'tag';
+        el.textContent = tag;
+        const x = document.createElement('span');
+        x.textContent = '×';
+        x.onclick = () => {
+          file.tags.splice(i, 1);
+          updateTagsDisplay(fileName);
+        };
+        el.appendChild(x);
+        tagContainer.appendChild(el);
+      });
+      countEl.textContent = `${file.tags.length}/50`;
+    }
+
+    function clearField(inputId) {
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.value = '';
+        input.dispatchEvent(new Event('input'));
+      }
+    }
+
+    function clearTags(fileName) {
+      const file = filesData.find(f => f.file.name === fileName);
+      if (file) {
+        file.tags = [];
+        updateTagsDisplay(fileName);
+      }
+    }
+
+    function removeFile(fileName) {
+      filesData = filesData.filter(f => f.file.name !== fileName);
+      document.querySelector(`[data-filename="${fileName}"]`)?.remove();
+    }
+
+    function selectAll(checked) {
+      document.querySelectorAll('.checkbox').forEach(cb => cb.checked = checked);
+      filesData.forEach(f => f.selected = checked);
+    }
+
+    function toggleSelect(checkbox) {
+      const fileName = checkbox.closest('.file-entry').dataset.filename;
+      const file = filesData.find(f => f.file.name === fileName);
+      if (file) file.selected = checkbox.checked;
+    }
+
+    function deleteSelected() {
+      filesData = filesData.filter(f => !f.selected);
+      document.querySelectorAll('.file-entry').forEach(entry => {
+        const fileName = entry.dataset.filename;
+        const f = filesData.find(f => f.file.name === fileName);
+        if (!f) entry.remove();
+      });
+    }
+
+    function downloadMetadata() {
+      let content = '';
+      filesData.filter(f => f.selected).forEach(f => {
+        content += `# ${f.file.name}\n`;
+        content += `Title: ${f.title}\n`;
+        content += `Tags: ${f.tags.join(', ')}\n\n`;
+      });
+      const blob = new Blob([content], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'metadata.txt';
+      a.click();
+    }
+
+    async function pasteToField(inputId) {
+      try {
+        const text = await navigator.clipboard.readText();
+        const input = document.getElementById(inputId);
+        if (input) {
+          input.value = text;
+          input.dispatchEvent(new Event('input'));
+        }
+      } catch (err) {
+        alert('Clipboard access gagal. Izinkan akses clipboard di browser.');
+      }
+    }
+
+    async function pasteToTags(fileName) {
+      try {
+        const text = await navigator.clipboard.readText();
+        const input = document.getElementById(`taginput-${fileName}`);
+        if (input) {
+          input.value = text;
+          input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        }
+      } catch (err) {
+        alert('Clipboard access gagal. Izinkan akses clipboard di browser.');
+      }
+    }
+  </script>
+</section>
+<!-- ======== Section: Title Reader ======== -->
+<section id="title-reader">
+  <style>
+    /* ======== Title Reader Styles ======== */
+    #title-reader {
+      background: #f9f9f9;
+      padding: 2rem 1rem;
+    }
+    #title-reader .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 24px;
+    }
+    #title-reader h2 {
+      margin-bottom: 20px;
+      font-size: 1.8em;
+      color: #333;
+    }
+    .upload-wrapper {
+      margin-bottom: 20px;
+    }
+    .upload-wrapper input[type="file"] {
+      display: none;
+    }
+    .upload-wrapper label {
+      background-color: #43a047;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      display: inline-block;
+    }
+    .file-block {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background: #fafafa;
+    }
+    .file-name {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #444;
+    }
+    label {
+      font-size: 0.9em;
+      margin-bottom: 4px;
+      color: #666;
+    }
+    .file-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      width: 100%;
+      resize: none;
+      overflow: hidden;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .btn {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background-color: #1565c0;
+    }
+    .file-actions {
+      align-self: flex-start;
+      margin-top: 6px;
+    }
+    @media (min-width: 600px) {
+      .file-block {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .file-info {
+        margin-right: 12px;
+      }
+      .file-actions {
+        margin-top: 28px;
+        white-space: nowrap;
+      }
+    }
+  </style>
+
+  <div class="container">
+    <h2>JPG Metadata - Title Reader & Editor</h2>
+    <div class="upload-wrapper">
+      <label for="fileInputTitle">+ Add Files</label>
+      <input type="file" id="fileInputTitle" accept=".jpg,.jpeg" multiple>
+    </div>
+    <div id="outputTitle"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/piexifjs"></script>
+  <script>
+    const fileInputTitle = document.getElementById('fileInputTitle');
+    const output = document.getElementById('outputTitle');
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+
+    function createUI(file, title, index) {
+      const block = document.createElement('div');
+      block.className = 'file-block';
+      block.innerHTML = `
+        <div class="file-info">
+          <div class="file-name">${file.name}</div>
+          <label for="title-${index}">Title:</label>
+          <textarea id="title-${index}" rows="1" oninput="autoResize(this)">${title}</textarea>
+        </div>
+        <div class="file-actions">
+          <button class="btn" onclick="copyTitle(${index})">Copy Title</button>
+        </div>
+      `;
+      output.appendChild(block);
+      autoResize(document.getElementById(`title-${index}`));
+    }
+
+    function getExifTitle(dataURL) {
+      try {
+        const exifObj = piexif.load(dataURL);
+        const title = exifObj['0th'][piexif.ImageIFD.ImageDescription];
+        return title ? decodeURIComponent(escape(title)) : '';
+      } catch {
+        return '';
+      }
+    }
+
+    function copyTitle(index) {
+      const textarea = document.getElementById(`title-${index}`);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      textarea.blur();
+    }
+
+    fileInputTitle.addEventListener('change', () => {
+      output.innerHTML = '';
+      const files = Array.from(fileInputTitle.files);
+      window.selectedFiles = files;
+
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function () {
+          const dataURL = reader.result;
+          const title = getExifTitle(dataURL);
+          createUI(file, title, index);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  </script>
+</section>
+
+</body>
+</html>

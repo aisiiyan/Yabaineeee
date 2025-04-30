@@ -54,6 +54,7 @@
             align-items: center;
             font-size: 13px;
             line-height: 1;
+            cursor: default; /* <<< cursor default di sini */
         }
         .tag.duplicate {
             border: 1px solid #f00;
@@ -103,6 +104,12 @@
             opacity: 1;
             bottom: 40px;
         }
+        .drop-indicator {
+            width: 2px;
+            background: blue;
+            height: 20px;
+            margin-right: 4px;
+        }
     </style>
 </head>
 <body>
@@ -129,6 +136,8 @@
         const keywordCount = document.getElementById('keywordCount');
         const toast = document.getElementById('toast');
         let keywords = [];
+        let draggedIndex = null;
+        let dropTargetIndex = null;
 
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
@@ -162,23 +171,61 @@
 
         function renderKeywords() {
             tagsContainer.innerHTML = '';
-
             const counts = {};
-            keywords.forEach(k => {
-                counts[k] = (counts[k] || 0) + 1;
-            });
+            keywords.forEach(k => counts[k] = (counts[k] || 0) + 1);
 
             keywords.forEach((keyword, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.alignItems = 'center';
+                wrapper.dataset.index = index;
+
+                wrapper.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    clearDropIndicators();
+                    showDropIndicator(wrapper);
+                    dropTargetIndex = parseInt(wrapper.dataset.index);
+                });
+
+                wrapper.addEventListener('drop', () => {
+                    if (draggedIndex !== null && dropTargetIndex !== null && draggedIndex !== dropTargetIndex) {
+                        const draggedItem = keywords[draggedIndex];
+                        keywords.splice(draggedIndex, 1);
+                        keywords.splice(dropTargetIndex, 0, draggedItem);
+                        draggedIndex = null;
+                        dropTargetIndex = null;
+                        renderKeywords();
+                    }
+                });
+
                 const tag = document.createElement('div');
                 tag.className = 'tag';
-                if (counts[keyword] > 1) {
-                    tag.classList.add('duplicate');
-                }
+                if (counts[keyword] > 1) tag.classList.add('duplicate');
+
+                tag.setAttribute('draggable', 'true');
+                tag.addEventListener('dragstart', () => draggedIndex = index);
+                tag.addEventListener('dragend', () => {
+                    draggedIndex = null;
+                    dropTargetIndex = null;
+                    clearDropIndicators();
+                });
+
                 tag.innerHTML = `${keyword}<button onclick="removeKeyword(${index})">x</button>`;
-                tagsContainer.appendChild(tag);
+                wrapper.appendChild(tag);
+                tagsContainer.appendChild(wrapper);
             });
 
             keywordCount.textContent = keywords.length;
+        }
+
+        function showDropIndicator(wrapper) {
+            const indicator = document.createElement('div');
+            indicator.className = 'drop-indicator';
+            wrapper.insertBefore(indicator, wrapper.firstChild);
+        }
+
+        function clearDropIndicators() {
+            document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
         }
 
         function copyKeywords() {
